@@ -45,12 +45,6 @@ font_main = font.Font(None, 36)
 # === ЗАВАНТАЖЕННЯ ЗОБРАЖЕНЬ ===
 # Функція для безпечного завантаження зображень з обробкою помилок
 def load_image_safe(path, size=None):
-    """
-    Безпечно завантажує зображення з обробкою помилок
-    path - шлях до файлу
-    size - розмір (width, height) або None
-    Повертає зображення або None при помилці
-    """
     try:
         img = image.load(path)
         if size:
@@ -75,7 +69,7 @@ if game_bg is None:
         game_bg = None
 
 # Фон екрану перемоги
-win_bg = load_image_safe('images/backgrounds/win_bg.jpg', (WIDTH, HEIGHT))
+win_bg = load_image_safe('images/backgrounds/win_bg.jpg', (800, 600))
 
 # === ЗАВАНТАЖЕННЯ ІГРОВИХ ЕЛЕМЕНТІВ ===
 # М'яч - тепер це зображення замість білого кола
