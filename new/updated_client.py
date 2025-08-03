@@ -5,6 +5,7 @@ from threading import Thread
 import os
 import sys
 
+
 # ---PYGAME НАЛАШТУВАННЯ ---
 WIDTH, HEIGHT = 800, 600
 init()

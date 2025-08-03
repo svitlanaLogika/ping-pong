@@ -8,6 +8,7 @@ import sys
 # ---PYGAME НАЛАШТУВАННЯ ---
 WIDTH, HEIGHT = 800, 600
 init()
+mixer.init()
 screen = display.set_mode((WIDTH, HEIGHT))
 clock = time.Clock()
 display.set_caption("Пінг-Понг")
@@ -18,6 +19,43 @@ font_button = font.Font(None, 36)
 font_win = font.Font(None, 72)
 font_main = font.Font(None, 36)
 font_small = font.Font(None, 24)
+
+# === ЗАВАНТАЖЕННЯ ЗВУКІВ ===
+def load_sound_safe(path, volume=0.5):
+    """
+    Безпечно завантажує звук з обробкою помилок
+    path - шлях до файлу
+    volume - гучність від 0.0 до 1.0
+    Повертає звук або None при помилці
+    """
+    try:
+        sound = mixer.Sound(path)
+        sound.set_volume(volume)
+        return sound
+    except Exception as e:
+        print(f"⚠️ Не вдалося завантажити звук {path}: {e}")
+        return None
+
+def load_music_safe(path, volume=0.3):
+    """
+    Безпечно завантажує фонову музику
+    path - шлях до файлу
+    volume - гучність від 0.0 до 1.0
+    """
+    try:
+        mixer.music.load(path)
+        mixer.music.set_volume(volume)
+        return True
+    except Exception as e:
+        print(f"⚠️ Не вдалося завантажити фонову музику {path}: {e}")
+        return False
+
+print("🔊 Завантажую звуки...")
+
+background_music_loaded = load_music_safe('audio/background_music.wav', 0.3)
+
+# Змінна для відстеження стану фонової музики
+music_playing = False
 
 # === ЗАВАНТАЖЕННЯ ЗОБРАЖЕНЬ ===
 def load_image_safe(path, size=None):
@@ -59,6 +97,38 @@ paddle1_img = load_image_safe('images/game_elements/paddle1.png', (20, 100))
 paddle2_img = load_image_safe('images/game_elements/paddle2.png', (20, 100))
 
 print("✅ Завантаження зображень завершено!")
+
+
+# === ФУНКЦІЇ ДЛЯ РОБОТИ З МУЗИКОЮ ===
+def start_background_music():
+    """Запускає фонову музику"""
+    global music_playing
+    if background_music_loaded and game_settings["sound_enabled"] and not music_playing:
+        try:
+            mixer.music.play(-1)  # -1 означає нескінченне повторення
+            music_playing = True
+            print("🎵 Фонова музика запущена")
+        except Exception as e:
+            print(f"⚠️ Помилка запуску фонової музики: {e}")
+
+def stop_background_music():
+    """Зупиняє фонову музику"""
+    global music_playing
+    if music_playing:
+        mixer.music.stop()
+        music_playing = False
+        print("🎵 Фонова музика зупинена")
+
+def play_sound_effect(sound):
+    """Програє звуковий ефект якщо звук увімкнено"""
+    if sound and game_settings["sound_enabled"]:
+        try:
+            sound.play()
+        except Exception as e:
+            print(f"⚠️ Помилка відтворення звуку: {e}")
+
+
+
 
 # === КЛАСИ ДЛЯ МЕНЮ ===
 class Button:
@@ -115,6 +185,7 @@ game_settings = {
 def start_game():
     global current_state
     current_state = CONNECTING
+    start_background_music()
     print("🎮 Підключення до гри...")
 
 def open_settings():
@@ -124,13 +195,26 @@ def open_settings():
 
 def exit_game():
     print("👋 До побачення!")
+    stop_background_music()
     quit()
     sys.exit()
 
 def back_to_menu():
     global current_state
     current_state = MENU
+    stop_background_music()
     print("🏠 Повертаюся до меню...")
+
+
+def toggle_sound():
+    """Перемикає звук"""
+    game_settings["sound_enabled"] = not game_settings["sound_enabled"]
+    if game_settings["sound_enabled"]:
+        start_background_music()
+        print("🔊 Звук увімкнено")
+    else:
+        stop_background_music()
+        print("🔇 Звук вимкнено")
 
 # === СТВОРЕННЯ КНОПОК МЕНЮ ===
 menu_buttons = [
@@ -141,7 +225,8 @@ menu_buttons = [
 
 settings_buttons = [
     Button(50, 500, 150, 40, "Назад", back_to_menu),
-    Button(WIDTH - 200, 500, 150, 40, "Застосувати", back_to_menu)
+    Button(WIDTH - 200, 500, 150, 40, "Застосувати", back_to_menu),
+    Button(350, 300, 150, 40, "Звук вкл/викл", toggle_sound)
 ]
 
 # === ФУНКЦІЇ ВІДОБРАЖЕННЯ ===
@@ -289,11 +374,13 @@ game_state = {}
 buffer = ""
 client = None
 connection_attempts = 0
+last_sound_event = None
 
 while True:
     # Обробка подій
     for e in event.get():
         if e.type == QUIT:
+            stop_background_music()
             exit()
         
         # Обробка подій для різних станів
@@ -378,6 +465,7 @@ while True:
             # Обробка кліку по кнопці меню
             for e in event.get():
                 if e.type == QUIT:
+                    stop_background_music()
                     exit()
                 menu_button.handle_event(e)
 
