@@ -52,6 +52,16 @@ def load_music_safe(path, volume=0.3):
 
 print("🔊 Завантажую звуки...")
 
+
+
+# Завантаження звукових ефектів
+paddle_hit_sound = load_sound_safe('audio/paddle_hit.wav', 0.6)  # Звук удару по ракетці
+wall_hit_sound = load_sound_safe('audio/wall_hit.wav', 0.4)      # Звук удару об стіну
+menu_click_sound = load_sound_safe('audio/menu_click.wav', 0.5)   # Звук кліку в меню
+win_sound = load_sound_safe('audio/win.wav', 0.7)                # Звук перемоги
+lose_sound = load_sound_safe('audio/lose.wav', 0.7)              # Звук поразки
+
+
 background_music_loaded = load_music_safe('audio/background_music.wav', 0.3)
 
 # Змінна для відстеження стану фонової музики
@@ -161,6 +171,7 @@ class Button:
             self.hovered = self.rect.collidepoint(event.pos)
         elif event.type == MOUSEBUTTONDOWN:
             if self.rect.collidepoint(event.pos) and self.action:
+                play_sound_effect(menu_click_sound)
                 self.action()
                 return True
         return False
@@ -445,8 +456,10 @@ while True:
             if you_winner is None:
                 if game_state["winner"] == my_id:
                     you_winner = True
+                    play_sound_effect(win_sound)
                 else:
                     you_winner = False
+                    play_sound_effect(lose_sound)
 
             if you_winner:
                 text = "Ти переміг!"
@@ -498,11 +511,9 @@ while True:
             # Звукові події
             if game_state['sound_event'] and game_settings["sound_enabled"]:
                 if game_state['sound_event'] == 'wall_hit':
-                    # звук відбиття м'ячика від стін
-                    pass
+                    play_sound_effect(wall_hit_sound)
                 if game_state['sound_event'] == 'platform_hit':
-                    # звук відбиття м'ячика від платформи
-                    pass
+                    play_sound_effect(paddle_hit_sound)
 
         else:
             # Екран очікування
